@@ -15,6 +15,7 @@ body {
   position: absolute;
   height: 49px;
   width: 100%;
+  z-index: 100;
 	background-image:url('Theme/Header.gif');
 	background-repeat:no-repeat;
 	background-color:#070707;
@@ -28,6 +29,23 @@ iframe {
   border: 0;
   z-index: -96;
 }
+
+#unlimited_life {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  padding: 7px 10px;
+  border: 3px outset #ffcc33;
+  background: #009966;
+  color: white;
+  cursor: pointer;
+  font-family: "Press Start";
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+#unlimited_life:hover { background: #00aa77; }
+#unlimited_life:active { border-style: inset; }
 
 #after {
   position: absolute;

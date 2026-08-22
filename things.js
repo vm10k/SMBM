@@ -1744,6 +1744,7 @@ function killPlayer(me, big) {
   if(!me.alive || me.flickering || me.dying) return;
   // If this is an auto kill, it's for rizzles
   if(big == 2) {
+    storeDeathStats(me);
     notime = true;
     me.dead = me.dying = true;
   }
@@ -1759,6 +1760,7 @@ function killPlayer(me, big) {
     // Otherwise, if this isn't a big one, animate a death
     else if(big != 2) {
       // Make this look dead
+      storeDeathStats(me);
       TimeHandler.clearAllCycles(me);
       setSize(me, 7.5, 7, true);
       updateSize(me);
@@ -1778,6 +1780,11 @@ function killPlayer(me, big) {
       }, 7, me);
     }
   }
+
+  if(autoRespawn)
+    setTimeout(function() {
+      if(autoRespawn) unlimitedLife();
+    }, timer * 30);
 
   // Clear and reset
   AudioPlayer.pause();
@@ -1811,10 +1818,10 @@ function killPlayer(me, big) {
   }
 }
 // Used by random maps to respawn
-function playerDropsIn() {
+function playerDropsIn(xloc) {
   // Clear and place Player
   clearOldPlayer();
-  placePlayer(unitsizet16, unitsizet8 * -1 + (map.underwater * unitsize * 24));
+  placePlayer(xloc || unitsizet16, unitsizet8 * -1 + (map.underwater * unitsize * 24));
   flicker(player);
   
   // Give a Resting Stone for him to land, unless it's underwater...

@@ -299,7 +299,9 @@ function setMessageTriggers() {
     },
 	setKey: function(data) {
 	  mapKeyToControl(data.action, data.keyCode);
-	}
+  },
+    unlimitedLife: unlimitedLife,
+    toggleAutoRespawn: function() { toggleAutoRespawn(); }
   };
   
   // When a message is received, send it to the appropriate command code
@@ -321,4 +323,26 @@ function triggerSetMap(data) {
   clearPlayerStats();
   setMap.apply(this, data.map || []);
   setLives(3);
+}
+
+function unlimitedLife() {
+  if(!window.player || (!player.dying && !player.dead)) return;
+
+  if(window.reset) {
+    clearTimeout(window.reset);
+    window.reset = false;
+  }
+  gameon = true;
+  data.playerpower = data.deathpower || data.playerpower || 1;
+  ++data.lives.amount;
+  updateDataElement(data.lives);
+  nokeys = notime = false;
+  playerDropsIn(data.deathx);
+}
+
+function toggleAutoRespawn(button) {
+  window.autoRespawn = !window.autoRespawn;
+  button = button || document.getElementById("unlimited_life");
+  if(button)
+    button.innerHTML = window.autoRespawn ? "NO CAP REVIVE: ON" : "NO CAP REVIVE: OFF";
 }

@@ -130,6 +130,16 @@ function setGameMapRandom() {
   game.focus();
 }
 
+function toggleUnlimitedLife() {
+  if(!game || !game.postMessage) return;
+  game.postMessage({
+    type: "toggleAutoRespawn"
+  }, "*");
+  var button = document.getElementById("unlimited_life");
+  button.innerHTML = game.autoRespawn ? "NO CAP REVIVE: OFF" : "NO CAP REVIVE: ON";
+  game.focus();
+}
+
 function setLevelEditor() {
   var out = document.getElementById("in_editor"),
       blurb = "Why use Nintendo's?<br />";

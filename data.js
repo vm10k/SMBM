@@ -139,6 +139,12 @@ function setLives(num) {
 function storePlayerStats() {
   data.playerpower = player.power;
 }
+
+function storeDeathStats(me) {
+  data.deathpower = me.power;
+  data.deathx = me.left;
+}
+
 function clearPlayerStats() {
   data.playerpower = player.power = 1;
 }
