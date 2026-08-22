@@ -215,6 +215,64 @@
 	};
 
 	/**
+	 * This platform polls the standard Gamepad API used by current browsers.
+	 *
+	 * @class StandardPlatform
+	 * @constructor
+	 * @module Gamepad
+	 */
+	var StandardPlatform = function(listener) {
+		this.listener = listener;
+		this.knownGamepads = [];
+	};
+
+	StandardPlatform.factory = function(listener) {
+		var platform = nullPlatform;
+		var navigator = window && window.navigator;
+
+		if (navigator && typeof(navigator.getGamepads) === 'function') {
+			platform = new StandardPlatform(listener);
+		}
+
+		return platform;
+	};
+
+	StandardPlatform.getType = function() {
+		return 'Standard';
+	};
+
+	StandardPlatform.prototype.getType = function() {
+		return StandardPlatform.getType();
+	};
+
+	StandardPlatform.prototype.isSupported = function() {
+		return true;
+	};
+
+	StandardPlatform.prototype.update = function() {
+		var gamepads = Array.prototype.slice.call(window.navigator.getGamepads(), 0);
+		var knownGamepads = this.knownGamepads;
+		var gamepad;
+		var i;
+
+		for (i = knownGamepads.length - 1; i >= 0; i--) {
+			gamepad = knownGamepads[i];
+			if (gamepads.indexOf(gamepad) < 0) {
+				knownGamepads.splice(i, 1);
+				this.listener._disconnect(gamepad);
+			}
+		}
+
+		for (i = 0; i < gamepads.length; i++) {
+			gamepad = gamepads[i];
+			if (gamepad && knownGamepads.indexOf(gamepad) < 0) {
+				knownGamepads.push(gamepad);
+				this.listener._connect(gamepad);
+			}
+		}
+	};
+
+	/**
 	 * This platform is for mozilla based environments that provide gamepad
 	 * updates via events.
 	 *
@@ -321,7 +379,7 @@
 	 * @property PlatformFactories
 	 * @type {Array}
 	 */
-	Gamepad.PlatformFactories = [WebKitPlatform.factory, FirefoxPlatform.factory];
+	Gamepad.PlatformFactories = [StandardPlatform.factory, WebKitPlatform.factory, FirefoxPlatform.factory];
 
 	/**
 	 * List of supported controller types.
@@ -836,7 +894,17 @@
 			if (entry !== -1) {
 				if ((typeof(entry) === 'number') && (entry < gamepad.buttons.length)) {
 					getter = function() {
-						return gamepad.buttons[entry];
+						var button = gamepad.buttons[entry];
+
+						if (button && typeof(button) === 'object') {
+							if (typeof(button.pressed) === 'boolean') {
+								return button.pressed ? 1 : 0;
+							}
+
+							return typeof(button.value) === 'number' ? button.value : 0;
+						}
+
+						return button;
 					};
 				}
 			} else if (buttons.byAxis && (index < buttons.byAxis.length)) {
