@@ -5,56 +5,28 @@
 function resetTriggers() {
   // Make the controls object
   window.controls = new Controls({
-    left:   [37, 65,      "AXIS_LEFT", "DPAD_LEFT"],                     // a,     left
-    right:  [39, 68,      "AXIS_RIGHT", "DPAD_RIGHT"],                   // d,     right
-    up:     [38, 87, 32,  "FACE_1", "DPAD_UP", "LEFT_BOTTOM_SHOULDER"],  // w,     up
-    down:   [40, 83,      "AXIS_DOWN", "DPAD_DOWN"],                     // s,     down
-    sprint: [16, 17,      "FACE_1"],                                     // shift, ctrl
+    left:   [37, 65,      "DPAD_LEFT"],                                  // a,     left
+    right:  [39, 68,      "DPAD_RIGHT"],                                 // d,     right
+    up:     [38, 87, 32,  "FACE_1", "DPAD_UP"],                          // w,     up / A
+    down:   [40, 83,      "DPAD_DOWN"],                                  // s,     down
+    sprint: [16, 17,      "FACE_2"],                                     // shift, ctrl / B
+    doublefire: ["FACE_3"],                                              // X
     pause:  [80,          "START_FORWARD"],                              // p
     mute:   [77],                                                        // m
     q:      [81],                                                        // q
     l:      [76],                                                        // l
   });
   
-  // Gamepad.js support for joysticks and controllers
+  // Gamepad.js support for digital controller buttons
   window.gamepad = new Gamepad();
   gamepad.bind(Gamepad.Event.BUTTON_DOWN, ControlsPipe("keydown", true));
   gamepad.bind(Gamepad.Event.BUTTON_UP, ControlsPipe("keyup", false));
-  gamepad.bind(Gamepad.Event.AXIS_CHANGED, function(event) {
-    var value = event.value,
-        value_abs = abs(value);
-    
-    // Don't allow tremors
-    if(value_abs < 0.1) return;
-    
-    // Depending on the axis used...
-    switch(event.axis) {
-      // Left stick, vertical
-      case "LEFT_STICK_Y":
-      case "RIGHT_STICK_Y":
-        // If it actually has a direction, either go up or down
-        if(value_abs > 0.5) {
-          keydown(value > 0 ? "DPAD_DOWN" : "DPAD_UP");
-        }
-        // It doesn't have a direction, so they're both unpressed
-        else {
-          keyup("DPAD_UP");
-          keyup("DPAD_DOWN");
-        }
-      break;
-      // Left stick, horizontal
-      case "LEFT_STICK_X":
-      case "RIGHT_STICK_X":
-        // If it actually has a direction, either go left or right
-        if(value_abs > 0.5) {
-          keydown(value < 0 ? "DPAD_LEFT" : "DPAD_RIGHT");
-        }
-        // It doesn't have a direction, so they're both unpressed
-        else {
-          keyup("DPAD_UP");
-          keyup("DPAD_DOWN");
-        }
-      break;
+  gamepad.bind(Gamepad.Event.DISCONNECTED, function(device) {
+    var control;
+
+    for(control in device.state) {
+      if(device.state[control] > 0.5)
+        ControlsPipe("keyup", false)({control: control});
     }
   });
 
@@ -112,6 +84,16 @@ function Controls(pipes, gamepadPipes) {
         player.fire();
       keys.sprint = 1;
     },
+    // Double fire
+    doublefire: function(keys) {
+      if(player.power == 3 && !keys.crouch) {
+        player.fire();
+        TimeHandler.addEvent(function() {
+          if(player.power == 3 && !player.dead && !player.keys.crouch)
+            player.fire();
+        }, 3);
+      }
+    },
     // Pause
     pause: function(keys) {
       if(!paused && !(window.editing && !editor.playing))
@@ -159,6 +141,7 @@ function Controls(pipes, gamepadPipes) {
     sprint: function(keys) {
       keys.sprint = 0;
     },
+    doublefire: function() {},
     // Pause (if held down)
     pause: function(keys) {
       unpause(true);
@@ -316,7 +299,9 @@ function setMessageTriggers() {
     },
 	setKey: function(data) {
 	  mapKeyToControl(data.action, data.keyCode);
-	}
+  },
+    unlimitedLife: unlimitedLife,
+    toggleAutoRespawn: function() { toggleAutoRespawn(); }
   };
   
   // When a message is received, send it to the appropriate command code
@@ -338,4 +323,26 @@ function triggerSetMap(data) {
   clearPlayerStats();
   setMap.apply(this, data.map || []);
   setLives(3);
+}
+
+function unlimitedLife() {
+  if(!window.player || (!player.dying && !player.dead)) return;
+
+  if(window.reset) {
+    clearTimeout(window.reset);
+    window.reset = false;
+  }
+  gameon = true;
+  data.playerpower = data.deathpower || data.playerpower || 1;
+  ++data.lives.amount;
+  updateDataElement(data.lives);
+  nokeys = notime = false;
+  playerDropsIn(data.deathx);
+}
+
+function toggleAutoRespawn(button) {
+  window.autoRespawn = !window.autoRespawn;
+  button = button || document.getElementById("unlimited_life");
+  if(button)
+    button.innerHTML = window.autoRespawn ? "NO CAP REVIVE: ON" : "NO CAP REVIVE: OFF";
 }

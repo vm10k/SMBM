@@ -18,6 +18,24 @@ body {
   overflow: hidden;
 }
 
+#unlimited_life {
+  position: fixed;
+  top: 7px;
+  left: 7px;
+  z-index: 100;
+  padding: 7px 10px;
+  border: 3px outset #ffcc33;
+  background: #009966;
+  color: white;
+  cursor: pointer;
+  font-family: "Press Start";
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+#unlimited_life:hover { background: #00aa77; }
+#unlimited_life:active { border-style: inset; }
+
 canvas {
   position: absolute;
   left: 0;
