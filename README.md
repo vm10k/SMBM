@@ -1,6 +1,5 @@
-<img width="2000" height="1683" alt="SMBM" src="https://github.com/user-attachments/assets/0e028de9-05af-4f91-be52-2f732fd851ca" />
-
 Super Mario Bros - Multiplayer Open World
+
 Features
 Real-Time Multiplayer: Synchronized player positions, character animations, fireballs, and world interactions.
 Two-Way Scrolling: Enhanced camera and physics engine allowing movement in both directions without losing floor collision or despawning map tiles.
