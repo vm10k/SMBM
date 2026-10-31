@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Super Mario Bros - Multiplayer Open World</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --mario-red: #d62828;
+      --mario-yellow: #ffcc00;
+      --mario-green: #00e676;
+      --mario-blue: #0077b6;
+      --bg-dark: #000c1e;
+      --card-bg: rgba(0, 20, 50, 0.75);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      color: #fff;
+      font-family: 'Roboto Condensed', sans-serif;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* --- CRT & ARCADE ATMOSPHERE --- */
+    .scanlines {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 4px, 6px 100%;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .vignette {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* --- TOP NAV BAR --- */
+    nav {
+      width: 100%;
+      max-width: 1200px;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      color: var(--mario-yellow);
+      text-shadow: 2px 2px #d62828;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .nav-btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #334;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-btn:hover {
+      border-color: var(--mario-yellow);
+      color: var(--mario-yellow);
+      transform: translateY(-2px);
+    }
+
+    .btn-discord {
+      background: #5865f2;
+      border-color: #5865f2;
+    }
+    .btn-discord:hover {
+      background: #4752c4;
+      border-color: #fff;
+      color: #fff;
+    }
+
+    /* --- HERO SECTION --- */
+    .hero-container {
+      width: 100%;
+      max-width: 1050px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .status-pill {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--mario-green);
+      border: 1px solid var(--mario-green);
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.25);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      background: var(--mario-green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.3; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 8px var(--mario-green); }
+    }
+
+    .hero-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(20px, 4.5vw, 44px);
+      color: var(--mario-yellow);
+      text-shadow: 4px 4px #d62828, 8px 8px 0px #000;
+      line-height: 1.35;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .hero-subtitle {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(9px, 1.6vw, 15px);
+      color: #90caf9;
+      text-shadow: 2px 2px #000;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+
+    /* FLOATING QUESTION BLOCK */
+    .q-block {
+      width: 54px;
+      height: 54px;
+      background: #fca044;
+      border: 4px solid #000;
+      box-shadow: inset 4px 4px 0 #ffe082, inset -4px -4px 0 #b35900, 0 6px 16px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 26px;
+      color: #fff;
+      text-shadow: 2px 2px #000;
+      margin-bottom: 28px;
+      animation: float 2.4s ease-in-out infinite alternate;
+      cursor: pointer;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-12px) rotate(2deg); }
+    }
+
+    /* --- MASSIVE ARCADE PLAY CTA BUTTON --- */
+    .btn-play-hero {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: linear-gradient(180deg, #d62828 0%, #9e0000 100%);
+      color: var(--mario-yellow) !important;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(12px, 2vw, 19px);
+      text-shadow: 3px 3px 0 #000;
+      padding: 20px 42px;
+      border: 4px solid var(--mario-yellow);
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(214, 40, 40, 0.7), 0 8px 0 #590000;
+      transition: all 0.15s ease;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .btn-play-hero:hover {
+      background: linear-gradient(180deg, #00e676 0%, #008744 100%);
+      border-color: #fff;
+      color: #fff !important;
+      transform: translateY(-3px);
+      box-shadow: 0 0 35px rgba(0, 230, 118, 0.8), 0 11px 0 #004d26;
+    }
+
+    .btn-play-hero:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.6), 0 3px 0 #004d26;
+    }
+
+    .btn-apk-hero {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: #3ddc84;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #3ddc84;
+      padding: 9px 18px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .btn-apk-hero:hover {
+      background: #3ddc84;
+      color: #000;
+    }
+
+    /* --- FEATURE CARDS GRID --- */
+    .features-grid {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      padding: 20px;
+      margin-top: 30px;
+      z-index: 10;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 2px solid #142a47;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: left;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--mario-yellow);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(255, 204, 0, 0.15);
+    }
+
+    .card-icon {
+      font-size: 26px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+
+    .card-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: var(--mario-yellow);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: #bbb;
+      line-height: 1.45;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      width: 100%;
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 11px;
+      color: #667;
+      border-top: 1px solid #142a47;
+      margin-top: auto;
+      z-index: 10;
+      line-height: 1.6;
+    }
+
+    footer a {
+      color: #90caf9;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero-container { padding: 25px 12px; }
+      .btn-play-hero { width: 100%; padding: 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+
+  <!-- NAVIGATION -->
+  <nav>
+    <a href="http://smbm.ezzeldeen.serv00.net/" class="logo-badge">
+      🍄 SMBM ONLINE
+    </a>
+    <div class="nav-links">
+      <a class="nav-btn" href="http://smbm.ezzeldeen.serv00.net/leaderboard" target="_blank">🏆 LEADERBOARD</a>
+      <a class="nav-btn" href="http://smbm.ezzeldeen.serv00.net/SMBM.apk" target="_blank">📱 ANDROID APK</a>
+      <a class="nav-btn btn-discord" href="https://discord.gg/AsqMfxvMP8" target="_blank">💬 DISCORD</a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <main class="hero-container">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      MULTIPLAYER SERVERS ONLINE
+    </div>
+
+    <div class="q-block" onclick="playCoinSound()" title="Hit the block!">?</div>
+
+    <h1 class="hero-title">SUPER MARIO BROS</h1>
+    <h2 class="hero-subtitle">★ OPEN WORLD MULTIPLAYER ONLINE ★</h2>
+
+    <!-- LAUNCH GAME BUTTON -->
+    <a href="http://smbm.ezzeldeen.serv00.net/" class="btn-play-hero" onclick="playStartSound()">
+      ▶ PLAY NOW IN BROWSER
+    </a>
+
+    <a href="http://smbm.ezzeldeen.serv00.net/SMBM.apk" class="btn-apk-hero" target="_blank">
+      <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 24 24">
+        <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v6c0 .83.67 1.5 1.5 1.5S5 16.33 5 15.5v-6C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.68 1.23 12.38 1 11 1c-1.38 0-2.68.23-3.64.63L5.88.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.3 1.3C4.54 3.32 3.2 5.37 3.03 7.85h15.94c-.17-2.48-1.51-4.53-3.44-5.69zM8.5 5c-.41 0-.75-.34-.75-.75s.34-.75.75-.75.75.34.75.75-.34.75-.75.75zm5 0c-.41 0-.75-.34-.75-.75s.34-.75.75-.75.75.34.75.75-.34.75-.75.75z"/>
+      </svg>
+      DOWNLOAD FOR ANDROID (.APK)
+    </a>
+
+    <!-- FEATURES OVERVIEW -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">REAL-TIME MULTIPLAYER</div>
+        <div class="card-desc">Jump into shared worlds with players worldwide. Sync enemies, break blocks, race for flagpoles, and chat in real-time.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">🎮</div>
+        <div class="card-title">FULL CONTROLLER SUPPORT</div>
+        <div class="card-desc">Play using your PS5, PS4, Xbox, Nintendo Switch, or PC Fightstick with full analog deadzone calibration and menu controls.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">🎨</div>
+        <div class="card-title">SKINS & CUSTOMIZATION</div>
+        <div class="card-desc">Pick Mario or Luigi and equip custom retro color palettes: Classic Red, Zombie, Fire Luigi, Nether, or 1989 GameBoy.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="card-icon">🗺️</div>
+        <div class="card-title">ALL 32 WORLDS + ENDLESS</div>
+        <div class="card-desc">Instant warp between World 1-1 all the way to 8-4, or test your skills in the procedural, endless Open World mode.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>SUPER MARIO BROS MULTIPLAYER OPEN WORLD</p>
+    <p>Non-commercial fan project created for educational & retro preservation purposes.</p>
+    <p style="margin-top: 6px;">Join the community on <a href="https://discord.gg/AsqMfxvMP8" target="_blank">Discord</a> • Made by at vm10k</p>
+  </footer>
+
+  <script>
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    // Authentic NES Coin Chime
+    function playCoinSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(987.77, now); // B5
+        osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } catch (e) {}
+    }
+
+    // Authentic NES 1-Up / Game Start Chime
+    function playStartSound() {
+      try {
+        const ctx = getAudioContext();
+        const notes = [330, 392, 659, 523, 587, 784];
+        let t = ctx.currentTime;
+
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freq, t);
+
+          gain.gain.setValueAtTime(0.18, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.09);
+          t += 0.07;
+        });
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
