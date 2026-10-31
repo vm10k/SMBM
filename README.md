@@ -4,6 +4,11 @@
 # 🍄 SUPER MARIO BROS — MULTIPLAYER OPEN WORLD
 
 ### ★ REAL-TIME MULTIPLAYER RETRO BROWSER ARENA ★
+<br/>
+
+<img width="100%" height="640" alt="Untitled Design" src="https://github.com/user-attachments/assets/d676f179-cebe-45b2-a9b5-8a625f17f943" />
+
+<br/><br/>
 
 [![Play Online](https://img.shields.io/badge/PLAY_NOW-ONLINE_IN_BROWSER-d62828?style=for-the-badge&logo=googlechrome&logoColor=white)](http://smbm.ezzeldeen.serv00.net/)
 [![Android APK](https://img.shields.io/badge/DOWNLOAD-ANDROID_.APK-3ddc84?style=for-the-badge&logo=android&logoColor=black)](http://smbm.ezzeldeen.serv00.net/SMBM.apk)
